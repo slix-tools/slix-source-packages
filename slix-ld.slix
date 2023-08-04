@@ -1,0 +1,47 @@
+#!/usr/bin/env slix-script
+# --packages
+# slix@1.0.0#ffe583d7925fec37f80ac5a3e55da75804a2acb47498f6cdf62d0d1264554ebd.gar
+# gcc13@13.1.1-1#dda39ad9ba096e2cac7cd7bdd9404bc3b1ea9c53f071e4e3dd6f49eebbcb5a78.gar
+# git@2.40.1-1#a3b55c5d5b4f4dcc183e842606af95da67604bfc77a5a5ca51013a1d7c4d2904.gar
+# gawk@5.2.2-1#1357455de7f9fcb40e91c47bc9bd3d46d4fbc3dc6a5936b3e6527dee8c45d3e0.gar
+# binutils@2.40-6#5c7e484b57c0a87b77404da6a119414bac08ceeb556ce6c7770c68c67f2fb884.gar
+# fmt@9.1.0-4#d68cd30ae767d6758e03edb83e1c3c28983e1f4841fa0e7d1062e24f7ee583bd.gar
+# fuse2@2.9.9-4#fe177241c3098cd16c268d2a1c83bb5dbd0ca44ab93fb630470f04a4f906a4da.gar
+# --run
+# bash
+
+set -Eeuo pipefail
+
+target=slix
+git_url=https://github.com/SGSSGene/slix.git
+version="1.0.0"
+mkdir -p tmp-slix-source-build && cd $_
+if [ -e ${target} ]; then
+    rm -rf ${target}
+fi
+git clone ${git_url} ${target}
+cd ${target};
+BUILD_TYPE=release ./create-slix-ld.sh && mv slix-ld.gar ../..
+BUILD_TYPE=release ./build.sh
+
+hash=$(sha256sum -b ../../slix-ld.gar | awk '{print $1}')
+
+mkdir -p ${target}-package/rootfs/usr/bin
+cp build/bin/slix ${target}-package/rootfs/usr/bin/.slix-ld-slix
+ln -s slix-ld ${target}-package/rootfs/usr/bin/slix
+(
+#    echo "slix-ld@1.0.0#${hash}"
+    echo "slix-ld@1.0.0#73612607c65295ea1569eebf3f5d5ef1218115986d8629357d8ddf36cfa5bf17"
+    echo "fmt@9.1.0-4#f8bf667d3f7d418c72e9890ef1bd3228715c052d912efeec7e9e3526ec4e6ff4"
+    echo "fuse2@2.9.9-4#66c4fd3cd57b0f7e1273114e024bf0df65305f49a6cc758f818a259bfc02c504"
+    echo "gcc-libs@13.1.1-1#66749d2fc606036045fb6f5979efb58671f522291aa3576631e6d94d14dbc607"
+    echo "openssl@3.0.8-1#982099c1ca267fa524d52bf8bc511de6c69cd7c4f5fcf94b7cf9a3c2dc225c4f"
+    echo "curl@8.1.1-1#cf76de823065361178791fdc3611ea702fde67858da9714a33b511b2df3cfc0f"
+    echo "zstd@1.5.5-1#1b87b29f3079886dd8b6b78a7dd54b2895b08f57f925a8a2f93f90545a448569"
+) > ${target}-package/dependencies.txt
+
+#export PATH=${PATH}:${HOME}/.local/bin
+slix archive --input ${target}-package --output ../../${target}.gar
+
+cd ..
+#rm -rf ${target}
