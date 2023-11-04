@@ -1,87 +1,13 @@
-#!/usr/bin/env slix-script
-# --packages
-# slix@0.1.0#25f3476d993e595951a8f6c9fc46aaa9df178c3d24a83c82ef1fa1521fba22b6
-# gcc13@13.1.1-2#9488b852d17abd194da44898eb5f567f4e07bba26392c059d604e5f51adb8790
-# git@2.41.0-2#4b1397129391eba79534909c753008d6df4a0528cee402f5f23ac6a32366049c
-# gawk@5.2.2-1#77257f724ff94e3058348d04fe375aa1615615b2f38be65fd6fd0dba7d059485
-# binutils@2.40-6#b224a9b37047b947975b8ec727fff60ac5744b93552d73006c44d89d7820321a
-# fmt@10.0.0-1#05d43d64c4a6c578751420943ce550fc2abdcfed7ec78e25bba9f2679df1bad3
-# fuse2@2.9.9-4#54109f6a11659d55a57643535a60a3c9d5da0968a13b65cedcb3260df467cd2a
-# linux-api-headers@6.3-1#357e551a5e59bd4c1efebb03d109f68c8f62b5d1e4ea2cd9cbc16c2752754810
-# --run
-# bash
+# SPDX-FileCopyrightText: 2023 S. G. Gottlieb <info.simon@gottliebtfreitag.de>
+# SPDX-License-Identifier: CC0-1.0
 
-set -Eeuo pipefail
-
-target=slix
-git_url=https://github.com/SGSSGene/slix.git
-version="0.1.0"
-mkdir -p tmp-slix-source-build && cd $_
-if [ -e ${target} ]; then
-    rm -rf ${target}
-fi
-git clone ${git_url} ${target}
-cd ${target};
-BUILD_TYPE=release ./create-slix-ld.sh && mv slix-ld.gar ../..
-BUILD_TYPE=release ./build.sh
-
-hash=$(sha256sum -b ../../slix-ld.gar | awk '{print $1}')
-
-mkdir -p ${target}-package/rootfs/usr/bin
-cp build/bin/slix ${target}-package/rootfs/usr/bin/.slix-ld-slix
-ln -s slix-ld ${target}-package/rootfs/usr/bin/slix
-(
-    # r ! slix -Ss bash curl fmt fuse2 gcc-libs glibc slix-ld zstd | awk '{ print "    echo \"" $1 "\"" }'
-    # r ! slix -Ss acl attr bash brotli ca-certificates-mozilla ca-certificates-utils ca-certificates coreutils curl e2fsprogs findutils fmt fuse-common fuse2 gcc-libs gdbm glibc gmp keyutils krb5 libcap libevent libffi libgcrypt libgpg-error libidn2 libldap libnghttp2 libp11-kit libpsl libsasl libssh2 libtasn1 libunistring libverto lz4 ncurses openssl p11-kit pam readline slix-ld systemd-libs util-linux-libs xz zlib zstd | awk '{ print "    echo \"" $1 "\"" }'
-    # r ! for f in acl attr bash brotli ca-certificates-mozilla ca-certificates-utils ca-certificates coreutils curl e2fsprogs findutils fmt fuse-common fuse2 gcc-libs gdbm glibc gmp keyutils krb5 libcap libevent libffi libgcrypt libgpg-error libidn2 libldap libnghttp2 libp11-kit libpsl libsasl libssh2 libtasn1 libunistring libverto lz4 ncurses openssl p11-kit pam readline slix-ld systemd-libs util-linux-libs xz zlib zstd; do ls ../custom-index | grep "^$f@" | rev | cut -b 9- | rev | awk '{ print "    echo \"" $1 "\"" }'; done
-    echo "acl@2.3.1-3#c4778238425e7db9acc8bd2661b5c0aaf4e4459399ddde6c59a84ad9738384d8"
-    echo "attr@2.5.1-3#876b1ab64f94cf6f5b801fed7e136bac250e871c20c714d5f9905e7f7411d4aa"
-    echo "bash@5.1.016-4#045131663cbca43acdb20210a9df6f2e161c32a46ff1655c8a1b468bd7850f14"
-    echo "brotli@1.0.9-12#60cef99541312750c5784e82285b4d469e98b5740e6daddb58c5015aa91233e4"
-    echo "ca-certificates-mozilla@3.92-1#5c164d0895a6473cf1ee8a088ae4ff2bfbb7d9bf908734ffacea8b6b68634109"
-    echo "ca-certificates-utils@20220905-1#db4a28aae8e2695a17c60dcb62b6cc401b515ea8c7be58cac3a30c8dcb97a5bc"
-    echo "ca-certificates@20220905-1#7c806dd97e6ec553f76db80628ee9eb5c0d8566a863dea1afe4d944929f570e1"
-    echo "coreutils@9.3-1#5bfe9c918ff310ad858325027c9e0a4e1bd45f1df0b115b281c7c2a389c1c5eb"
-    echo "curl@8.2.1-1#9b8b5afc23e8598ed9caaf4428daa43588931d0682af4252c99493d75ebcd4d6"
-    echo "e2fsprogs@1.47.0-1#4b36cec94cf4b10b00318f91963a2c949f8cd2d22e588bb08549759ba27d0574"
-    echo "findutils@4.9.0-3#3bcf7523b9b21ad5cbe547ece4a8d31aced8b5a68227560fe03fa9252638108e"
-    echo "gcc-libs@13.1.1-2#24bec19f5879be7356d32ad9e890485b9b53140e169bf09c1e67da95a28d40ca"
-    echo "gdbm@1.23-2#78f88f1a800f0babfcd15f81d8efcd57877e19cc454e89b5df07413c901c4edc"
-    echo "glibc@2.37-3#d23a4dccb8fbc4f49d81fd6902f98cc14207d65caa96792eb80d0137c48a0392"
-    echo "gmp@6.2.1-2#8a6d87c19bcaffe36f40ed00a47eb482e51fb8994bae44235088e198dddc24dd"
-    echo "keyutils@1.6.3-2#5451474706f2d28d879355ba87ddd4167777029a452a4ce9321942525855607f"
-    echo "krb5@1.20.1-1#fa1871e5e823a4e2ed3dee3e8de7ba40b39baf493ba46dfcf8ecbecb75cb2829"
-    echo "libcap@2.69-1#dcf629fca35bdda7ee1a558847a3e8f2034dd5278d058624cd88b88476f7fa59"
-    echo "libevent@2.1.12-4#6c1c02e0aa8134bc47b05e5bdce6d61a65f676d3e1c4c6bc8a81ec826949c1c9"
-    echo "libffi@3.4.4-1#3adde41b33c205c42c77a6b9b5d9ff78ded2fa2985f6cb30fb9a1769334ddb55"
-    echo "libgcrypt@1.10.2-1#ea3f46b350b27c09c611ce6f8e7034d011aab92193218c1241c44fae70d4f0ee"
-    echo "libgpg-error@1.47-1#8d053d4002810d0a0ed11836ecf935defbfdffc983565e2e59f4ac3f03a114ac"
-    echo "libidn2@2.3.4-3#792d00f78034a05fd208730e99fd72ba3a76d82cca9102fe9c0f49932c3f31cb"
-    echo "libldap@2.6.4-2#fafc8793834e8f0d66f712961999629e7ef23585d8035c5ef6cd6d11da559984"
-    echo "libnghttp2@1.55.1-1#0a2a2e4cb0a029f98245dd6550ccdb4b7ef18e15f9d385019992e6c6b7b55f8b"
-    echo "libp11-kit@0.25.0-1#aec219c3c6c15ab2ed3225f1a3ff6966d5313b764437216ad94067e4b5e03596"
-    echo "libpsl@0.21.2-1#e3c59a17b2c30f8730eeebabb5db507160fc647a52de378bad53cd98382e24e9"
-    echo "libsasl@2.1.28-4#73e7fe21f637d13416d5d94a464c42575c461248ecb01198006dfd4920118f83"
-    echo "libssh2@1.11.0-1#55e0516e301e0f44097a4bd96f894e5ea4a45822fd2cabac0312c5543faeb9ec"
-    echo "libtasn1@4.19.0-1#d10c2819c0ccf29487cd7fde77b8712b1517afcb8743e58d0fcda4a49a965ce0"
-    echo "libunistring@1.1-2#911d121804ddfb56778b9d08f1405061892ff48370a7e4aab69b48ec5d842eca"
-    echo "libverto@0.3.2-4#d532941686f0c2d124edb87a73f57c7993f0795791449788058a93b0ee27d7a3"
-    echo "lz4@1:1.9.4-1#c00adfd559fa70fb2fece60d15778b84ba0d01ea771e749023da1598b43bea38"
-    echo "ncurses@6.4_20230520-1#7afc3a5098102714054b344aaf13fa1fb29ee6740ed6078e063b699c50099b5a"
-    echo "openssl@3.1.1-1#5f7795456618ebe408bf0c78219c232edb9c0fc8b509002a6d4f5fb9e41ce15b"
-    echo "p11-kit@0.25.0-1#9b4e45babb699c07188da9840150bf71f4595c450c9e8214ecca437ffe8543e9"
-    echo "pam@1.5.3-3#b4f4911dc66faeb0d9da93b07ccf9459e5117ce3e3088cd865e784ccf94eb397"
-    echo "readline@8.2.001-2#9da2f02424a63e2c03d108f238a3eb584e419bdb8f95a897892cef621f0a41e3"
-    echo "slix-ld@1.0.0#ac768b6314dae4761a981b8ca624dc95ccc042182f961cd2ca18fd3173201b44"
-    echo "systemd-libs@253.7-1#55bf8fac75de9ca08b738ee5ba54497d3648da41f42a4af22b66c636405d220c"
-    echo "util-linux-libs@2.39.1-1#efb161f31b51c00327c9019f138ab459c59811f1f815add0bc939c9efec372c5"
-    echo "xz@5.4.3-1#e90d1d15152250432eaaf137e84413b4fa43de57cbdb172e127c684faf27a883"
-    echo "zlib@1:1.2.13-3#9503f0b533c06b25d7111cdf72fa7874b7e319aa85893cbc134dc77ae532e8e6"
-    echo "zstd@1.5.5-1#9e649597d5159bd75549a523e04c29a5117edd7853abcf8b1a053559ede1ee14"
-) > ${target}-package/dependencies.txt
-
-#export PATH=${PATH}:${HOME}/.local/bin
-slix archive --input ${target}-package --output ../../${target}.gar
-
-cd ..
-#rm -rf ${target}
+binutils@2.41-3#d78ac54881ae0ae7b5b0b067dec41d1df88b84e50a2ceb7f79634b0b3d130876
+fmt@10.1.1-1#1b8285a8a02bfa8da5fd1a33a9259e495790642c66f540a5985e3de879976bab
+fuse3@3.16.2-1#4009c70007e00498a063aa7bb6d3415f3154a4f2d92968ec3881c12f68f8fed6
+gawk@5.2.2-1#da2bbaa470bdbcdb7fab654d5367528cca8253fda44e2e1df7ad4250b5860ea3
+gcc13@13.2.1-3#cd608e29bb9e566b358f23b85b3d82711972a5799307012e52cffd09ee41bbd7
+git@2.42.0-1#1b78c8a5a2c83956f36a2c3a5a1de85b0e0f55d21b9205f2653c6d18a9e66723
+linux-api-headers@6.4-1#73414107a1a9df7d4ab4b080bf519040e44b482cbf2705dd2ff40448c762ff71
+slix@0.1.7#5ae18ed76c66b8054aa8d6ae5aa2638932b400607cb0d275241e1af4fcac6211
+ccache@4.8.3-1#55f438e8c85abe2152dacf5544b728681cad2837d6c71bfaa74fcdb76960c5f4
+yaml-cpp@0.8.0-1#30b5d0541c285819d65870cec5e0afcc9faa27944094fb2c89d59483b13c428a
